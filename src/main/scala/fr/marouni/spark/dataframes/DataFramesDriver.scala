@@ -47,8 +47,6 @@ object DataFramesDriver extends App{
     // test file
     val testFile: URL = getClass.getResource("/hn.json")
 
-    println("XXXXXXXXXXXXXXXXXXXX : " + testFile.getPath)
-
     val sparkConf = new SparkConf()
     val sc = new SparkContext("local[*]", "SQL tests", sparkConf)
     val hiveContext = new HiveContext(sc)
@@ -60,7 +58,7 @@ object DataFramesDriver extends App{
 
     df.registerTempTable("tab1")
 
-    hiveContext.sql("SELECT * FROM tab1 LIMIT 10").show()
+    //hiveContext.sql("SELECT * FROM tab1 LIMIT 10").show()
 
     // explode() takes in an array (or a map) as an input and outputs the elements of the array (map) as separate rows.
     /*hiveContext.sql(
@@ -120,7 +118,7 @@ object DataFramesDriver extends App{
     //df.groupBy("type").agg(org.apache.spark.sql.functions.approxCountDistinct("ppu")).show()
 
     // analytics
-    //df.cube("type", "name").avg("ppu").show()
+    df.cube("type", "name").avg("ppu").show()
 
     // windows
     // TBC
