@@ -2,10 +2,11 @@ package fr.marouni.spark.dataframes
 
 import java.net.URL
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Row, DataFrame, SQLContext}
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * Created by abbass on 07/07/16.
@@ -56,9 +57,9 @@ object DataFramesDriver extends App{
       .schema(itemSchema)
       .json(testFile.getPath)
 
-    df.registerTempTable("tab1")
+    //df.registerTempTable("tab1")
 
-    //hiveContext.sql("SELECT * FROM tab1 LIMIT 10").show()
+    // hiveContext.sql("SELECT * FROM tab1 LIMIT 10").show()
 
     // explode() takes in an array (or a map) as an input and outputs the elements of the array (map) as separate rows.
     /*hiveContext.sql(
@@ -118,16 +119,49 @@ object DataFramesDriver extends App{
     //df.groupBy("type").agg(org.apache.spark.sql.functions.approxCountDistinct("ppu")).show()
 
     // analytics
-    df.cube("type", "name").avg("ppu").show()
+    //df.cube("type", "name").avg("ppu").show()
 
     // windows
     // TBC
 
+    // order by
+    //val df0: DataFrame = df.orderBy(df("id"))
+    //df0.show()
+
+    // Read Hive table as DF
+    // hiveContext.table("TABLE_NAME")
+    // Refresh table's metadata
+    // hiveContext.refreshTable("TABLE_NAME")
 
 
+    // DF conversion
+    /*Converting a DataFrame to an RDD is a transformation (not an action);
+    however, converting an RDD to a DataFrame or Dataset may involve computing (or sampling some of) the input RDD.
 
+    Creating a DataFrame from an RDD is not free in the general case.
+    The data must be converted into Spark SQL’s internal format.*/
 
+    // DF from an RDD
+    // Creating a DataFrame from an RDD is not free in the general case.
+    // The data must be converted into Spark SQL’s internal format.
+    val rdd0: RDD[String] = sc.textFile(testFile.getPath)
+    val rdd1: RDD[Row] = rdd0.map({
+      line => Row(line)
+    })
+    val testSchema=StructType(
+      StructField("line",StringType,true):: Nil
+    )
+    val cdf: DataFrame = hiveContext.createDataFrame(rdd1, testSchema)
+    cdf.orderBy(cdf("line")).show()
 
+    // RDD from DF
+    // RDD show 1
+    /*val rdd0: RDD[String] = sc.textFile(testFile.getPath)
+    rdd0.take(1).foreach(println(_))
+    // DF show 1
+    df.rdd.take(1).foreach(println(_))*/
+
+    Thread.sleep(100000000)
   }
 
 
