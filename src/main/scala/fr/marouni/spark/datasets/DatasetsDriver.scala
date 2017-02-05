@@ -1,13 +1,11 @@
 package fr.marouni.spark.datasets
 
 import java.net.URL
-import java.util
 
-import fr.marouni.spark.dataframes.DataFramesDriver._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.functions._
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * Created by abbass on 12/03/16.
@@ -30,11 +28,11 @@ object DatasetsDriver extends App {
     val sc = new SparkContext("local[*]", "SQL tests", sparkConf)
     val sqlContext = new SQLContext(sc)
 
+    import sqlContext.implicits._
 
 
     // **** Creating Datasets ****
 
-    // 1 -  DS from primitives & cases classes
     // DS From DF
     /*For loading data into a Dataset, unless a special API is provided by your data source,
     you can first load your data into a DataFrame and then convert it to a Dataset.
@@ -45,10 +43,11 @@ object DatasetsDriver extends App {
     /*Converting to/from DataFrames is almost “free” in that
       the underlying data does not need to be changed, only extra compile time type information is added/removed.*/
 
-    import sqlContext.implicits._
 
-    val transStr: Dataset[String] = sqlContext.read.text(transactionsFile.getPath).as[String]
+
+    /*val transStr: Dataset[String] = sqlContext.read.text(transactionsFile.getPath).as[String]
     val dirStr: Dataset[String] = sqlContext.read.text(directoryFile.getPath).as[String]
+
     val transDS: Dataset[order] = transStr.map({ line => {
       val splits: Array[String] = line.split(",")
       order(splits(0), splits(1), splits(2).toInt, splits(3).toDouble, splits(4).toDouble)
@@ -59,37 +58,62 @@ object DatasetsDriver extends App {
       companyinfo(splits(0), splits(1))
     })
 
-    // Dataframes from DS
-    /*val transDF: DataFrame = transDS.toDF()
-    val dirDF: DataFrame = dirDS.toDF()*/
+    transDS.show(10) */
+
+    /*
+    Stage 0
+    hadoopRDD
+    mapPartitions
+    ConvertToSafe
+    MapPartitionsRDD [4]show at DatasetsDriver.scala:58
+    Limit
+
+    Stage 1
+    Limit
+    map
+     */
 
     // DS from RDD (DS by encoders) :
     /*Converting a Dataset of type T to an RDD of type T can be done by calling .rdd,
     which unlike calling toDF, does involve converting the data from the internal SQL format to the regular types.*/
 
-    // val file: RDD[String] = sc.textFile("/home/abbass/dev/spark/sqldata/transcations.csv")
-    // val rdd: RDD[order] = file.map(line => {
-    //   val splits: Array[String] = line.split(",")
-    //  order(splits(0), splits(1), splits(2).toInt, splits(3).toDouble, splits(4).toDouble)
-    //
-    // })
+    /*val file: RDD[String] = sc.textFile("/home/abbass/dev/spark/sqldata/transcations.csv")
+    val rdd: RDD[order] = file.map(line => {
+      val splits: Array[String] = line.split(",")
+      order(splits(0), splits(1), splits(2).toInt, splits(3).toDouble, splits(4).toDouble)
+    })
 
-    // val file2: RDD[String] = sc.textFile("/home/abbass/dev/spark/sqldata/directory.csv")
-    // val rdd2: RDD[companyinfo] = file2.map(line => {
-    //  val splits: Array[String] = line.split(",")
-    //  companyinfo(splits(0), splits(1))
-    // })
+    val file2: RDD[String] = sc.textFile("/home/abbass/dev/spark/sqldata/directory.csv")
+    val rdd2: RDD[companyinfo] = file2.map(line => {
+      val splits: Array[String] = line.split(",")
+      companyinfo(splits(0), splits(1))
+    })
 
-    // val ds = rdd.toDS()
-    // val ds2 = rdd2.toDS()
+    val ds = rdd.toDS()
+    val ds2 = rdd2.toDS()
+
+    ds.show() */
+
+    /*
+    Stage 0
+      textFile
+        map
+        map
+        Limit
+    Stage 1
+      Limit
+      map
+     */
 
     // DS from DF :
-    // val df: DataFrame = sqlContext.createDataFrame(rdd)
-    // df.registerTempTable("tab1")
-    // val df2: DataFrame = sqlContext.createDataFrame(rdd2)
-    // df2.registerTempTable("tab2")
-    // val ds: Dataset[order] = df.as[order]
-    // val ds2: Dataset[companyinfo] = df2.as[companyinfo]
+    /*
+    val df: DataFrame = sqlContext.createDataFrame(rdd)
+    df.registerTempTable("tab1")
+    val df2: DataFrame = sqlContext.createDataFrame(rdd2)
+    df2.registerTempTable("tab2")
+    val ds: Dataset[order] = df.as[order]
+    val ds2: Dataset[companyinfo] = df2.as[companyinfo]
+    */
 
     // 3- DS Maps :
     // val clients: Dataset[String] = ds.map(x => x.client)
@@ -132,17 +156,14 @@ object DatasetsDriver extends App {
       second TungstenAggregate with mode=Final
 
       - Do some casting and type conversion ( ConvertToSave )*/
-    val groupedCity: GroupedDataset[String, order] = transDS.groupBy(_.client)
-    val aggregatedClientPrices: Dataset[(String, Double)] = groupedCity.agg(sum("price").as[Double])
-    aggregatedClientPrices.show()
+    // val groupedCity: GroupedDataset[String, order] = transDS.groupBy(_.client)
+    // val aggregatedClientPrices: Dataset[(String, Double)] = groupedCity.agg(sum("price").as[Double])
+    // aggregatedClientPrices.show()
 
 
     // 3- Joins
     //transDS.joinWith(dirDS, $"company=company").show()
 
-
-    // Spark 2.0
-    // transDF.selectExpr("avg(price)").show()
 
     // Do not quit we need to check webUI
     Thread.sleep(10000000)
