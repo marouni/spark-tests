@@ -5,6 +5,8 @@ import org.apache.spark.{SparkContext, SparkConf}
 
 /**
   * Created by abbass on 19/06/16.
+  *
+  * https://datarus.wordpress.com/2015/05/04/fighting-the-skew-in-spark/
   */
 object Driver extends App{
 
@@ -12,7 +14,7 @@ object Driver extends App{
     val sparkConf = new SparkConf()
     val sc = new SparkContext("local[*]", "SQL tests", sparkConf)
 
-    val num_parts = 16
+    val num_parts = 4
     val largeRDD: RDD[(Int, Int)] = sc.parallelize(0 until (num_parts), num_parts).flatMap({
       x =>
         val range: Range = 0 until (Math.exp(x.toDouble).toInt)
@@ -21,12 +23,16 @@ object Driver extends App{
         })
     })
 
+    // largeRDD.saveAsTextFile("/tmp/largerdd")
+
     val smallRDD: RDD[(Int, Int)] = sc.parallelize(0 until (num_parts), num_parts).map({
       x => (x, x)
     })
 
-    //val join1: RDD[(Int, (Int, Option[Int]))] = largeRDD.leftOuterJoin(smallRDD)
-    //join1.saveAsTextFile("file:///tmp/join_skewed")
+    // smallRDD.saveAsTextFile("/tmp/smallrdd")
+
+    val join1: RDD[(Int, (Int, Option[Int]))] = largeRDD.leftOuterJoin(smallRDD)
+    join1.saveAsTextFile("file:///tmp/join_skewed")
 
     //Index  ▴	ID	Attempt	Status	Locality Level	Executor ID / Host	Launch Time	Duration	GC Time	Shuffle Read Size / Records	Errors
     //  0	32	0	SUCCESS	PROCESS_LOCAL	driver / localhost	2016/06/19 19:41:20	66 ms		984.0 B / 2
@@ -50,21 +56,21 @@ object Driver extends App{
 
     // Optimization
 
-    val N = 100
-    val transformedSmallRDD: RDD[((Int, Int), Int)] = smallRDD.cartesian(sc.parallelize(0 until (N))).map({
-      x => ((x._1._1, x._2), x._1._2)
-    }).coalesce(num_parts)
+    // val N = 20
+    // val transformedSmallRDD: RDD[((Int, Int), Int)] = smallRDD.cartesian(sc.parallelize(0 until (N))).map({
+    //   x => ((x._1._1, x._2), x._1._2)
+    // }).coalesce(num_parts)
 
-    val transformedLargeRDD: RDD[((Int, Int), Int)] = largeRDD.map({
-      val r = scala.util.Random
-      x => ((x._1, r.nextInt(N)), x._2)
-    })
+    // val transformedLargeRDD: RDD[((Int, Int), Int)] = largeRDD.map({
+    //  val r = scala.util.Random
+    //  x => ((x._1, r.nextInt(N)), x._2)
+    // })
 
-    val join: RDD[((Int, Int), (Int, Option[Int]))] = transformedLargeRDD.leftOuterJoin(transformedSmallRDD)
+    // val join: RDD[((Int, Int), (Int, Option[Int]))] = transformedLargeRDD.leftOuterJoin(transformedSmallRDD)
 
-    join.map({
-      x => (x._1._1, x._2)
-    }).saveAsTextFile("/tmp/join_no_skew")
+    // join.map({
+    //   x => (x._1._1, x._2)
+    // }).saveAsTextFile("/tmp/join_no_skew")
 
     // 7	39	0	SUCCESS	PROCESS_LOCAL	driver / localhost	2016/06/19 19:44:45	0.8 s	40 ms	1071.2 KB / 169757
     // 13	45	0	SUCCESS	PROCESS_LOCAL	driver / localhost	2016/06/19 19:44:47	0.9 s	14 ms	1244.8 KB / 195722
@@ -85,7 +91,7 @@ object Driver extends App{
 
 
 
-    Thread.sleep(100000000)
+    // Thread.sleep(100000000)
   }
 
 
