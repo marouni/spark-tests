@@ -1,0 +1,12 @@
+{
+   "namespace": "marouni.fr",
+   "type": "record",
+   "name": "Transaction",
+   "fields": [
+      {"name": "company", "type": "string"},
+      {"name": "client", "type": "string"},
+      {"name": "item", "type": "int"},
+      {"name": "qty", "type": "double"},
+      {"name": "price", "type": "double"}
+   ]
+}

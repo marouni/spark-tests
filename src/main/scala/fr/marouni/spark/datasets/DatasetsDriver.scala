@@ -2,10 +2,7 @@ package fr.marouni.spark.datasets
 
 import java.net.URL
 
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-import org.apache.spark.sql.functions._
-import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * Created by abbass on 12/03/16.
@@ -13,8 +10,8 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Spark Datasets
   */
 
-case class order(company: String, client: String, item: Integer, qty: Double, price: Double)
-case class companyinfo(company: String, address: String)
+case class Order(company: String, client: String, item: Integer, qty: Double, price: Double)
+case class CompanyInfo(company: String, address: String)
 
 object DatasetsDriver extends App {
 
@@ -24,14 +21,19 @@ object DatasetsDriver extends App {
     val transactionsFile: URL = getClass.getResource("/transcations.csv")
     val directoryFile: URL = getClass.getResource("/directory.csv")
 
-    val sparkConf = new SparkConf()
-    val sc = new SparkContext("local[*]", "SQL tests", sparkConf)
-    val sqlContext = new SQLContext(sc)
+    val sparkSession = SparkSession.builder()
+      .appName("Dataset tests")
+      .master("local[*]")
+      .getOrCreate()
 
-    import sqlContext.implicits._
-
+    import sparkSession.implicits._
 
     // **** Creating Datasets ****
+    val transactionsDataset = sparkSession.read.format("csv")
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .load(transactionsFile.getPath)
+      .as[Order]
 
     // DS From DF
     /*For loading data into a Dataset, unless a special API is provided by your data source,
@@ -163,10 +165,6 @@ object DatasetsDriver extends App {
 
     // 3- Joins
     //transDS.joinWith(dirDS, $"company=company").show()
-
-
-    // Do not quit we need to check webUI
-    Thread.sleep(10000000)
 
 
   }

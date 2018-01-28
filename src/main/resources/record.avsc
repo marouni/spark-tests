@@ -1,0 +1,12 @@
+{
+   "namespace": "marouni.fr",
+   "type": "record",
+   "name": "MyBean",
+   "fields": [
+      {"name": "name", "type": "string"},
+      {"name": "id", "type": "int"},
+      {"name": "salary", "type": "double"},
+      {"name": "age", "type": "int"},
+      {"name": "address", "type": "string"}
+   ]
+}
